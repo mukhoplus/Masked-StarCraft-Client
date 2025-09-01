@@ -303,14 +303,6 @@ npm run type-check
 npm run lint
 ```
 
-## 🤝 기여하기
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## 📄 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
@@ -318,13 +310,6 @@ npm run lint
 ## 👨‍💻 개발자
 
 **mukhoplus** - [GitHub](https://github.com/mukhoplus)
-
-## 🙏 감사의 말
-
-- [Next.js](https://nextjs.org/) 팀의 훌륭한 프레임워크
-- [Tailwind CSS](https://tailwindcss.com/)의 아름다운 디자인 시스템
-- [React Query](https://tanstack.com/query/latest)의 강력한 서버 상태 관리
-- StarCraft 커뮤니티의 지속적인 열정
 
 ---
 
