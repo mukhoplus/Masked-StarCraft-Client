@@ -119,9 +119,9 @@ export default function MapsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-4">🗺️ 맵 관리</h1>
-        <p className="text-lg text-white">총 {mapsData.length}개의 맵</p>
+      <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+        <h1 className="text-4xl font-bold text-black mb-4">🗺️ 맵 관리</h1>
+        <p className="text-lg text-black">총 {mapsData.length}개의 맵</p>
       </div>
 
       {/* 맵 추가 섹션 */}
@@ -221,9 +221,9 @@ export default function MapsPage() {
       </div>
 
       {/* 도움말 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-blue-800 mb-3">💡 도움말</h3>
-        <ul className="space-y-2 text-blue-700">
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h3 className="text-lg font-bold text-black mb-3">💡 도움말</h3>
+        <ul className="space-y-2 text-black">
           <li>• 대회 시작 전에 최소 1개 이상의 맵을 추가해주세요.</li>
           <li>• 경기마다 무작위로 맵이 선택됩니다.</li>
           <li>

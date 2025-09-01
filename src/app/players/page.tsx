@@ -1,68 +1,72 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { playersApi } from "@/api/players";
+import {
+  usePlayers,
+  useDeletePlayer,
+  useDeleteAllPlayers,
+} from "@/hooks/usePlayers";
+import { tournamentsApi } from "@/api/tournaments";
 import { Player } from "@/types";
 import RaceBadge from "@/components/RaceBadge";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function PlayersPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user, logout } = useAuth();
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   // 참가자 목록 조회
-  const { data: players, isLoading } = useQuery({
-    queryKey: ["players"],
-    queryFn: () => playersApi.getPlayers(),
+  const { data: players, isLoading } = usePlayers();
+
+  // 대회 상태 확인
+  const { data: tournament } = useQuery({
+    queryKey: ["tournament"],
+    queryFn: () => tournamentsApi.getCurrentTournament(),
   });
 
-  // 참가자 삭제
-  const deletePlayerMutation = useMutation({
-    mutationFn: (playerId: number) => playersApi.deletePlayer(playerId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      toast.success("참가자가 삭제되었습니다.");
-    },
-    onError: (error: unknown) => {
-      let errorMessage = "참가자 삭제에 실패했습니다.";
-      if (error && typeof error === "object" && "response" in error) {
-        const response = (
-          error as { response?: { data?: { message?: string } } }
-        ).response;
-        if (response?.data?.message) {
-          errorMessage = response.data.message;
-        }
-      }
-      toast.error(errorMessage);
-    },
-  });
+  // 참가자 삭제 훅
+  const deletePlayerMutation = useDeletePlayer();
 
-  // 모든 참가자 삭제
-  const deleteAllPlayersMutation = useMutation({
-    mutationFn: () => playersApi.deleteAllPlayers(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-      toast.success("모든 참가자가 삭제되었습니다.");
+  // 모든 참가자 초기화 훅
+  const deleteAllPlayersMutation = useDeleteAllPlayers();
+
+  // 참가 취소 시 자동 로그아웃을 위한 별도 mutation
+  const selfDeleteMutation = useMutation({
+    mutationFn: () => {
+      // /me 엔드포인트 사용 - playerId 불필요
+      const { playersApi } = require("@/api");
+      return playersApi.deleteSelf();
     },
-    onError: (error: unknown) => {
-      let errorMessage = "모든 참가자 삭제에 실패했습니다.";
-      if (error && typeof error === "object" && "response" in error) {
-        const response = (
-          error as { response?: { data?: { message?: string } } }
-        ).response;
-        if (response?.data?.message) {
-          errorMessage = response.data.message;
-        }
-      }
-      toast.error(errorMessage);
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+      toast.success("참가가 취소되었습니다. 로그아웃됩니다.");
+
+      // 1초 후 자동 로그아웃 및 메인 페이지로 이동
+      setTimeout(() => {
+        logout();
+        router.push("/");
+      }, 1000);
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      const message =
+        error.response?.data?.message || "참가 취소에 실패했습니다.";
+      toast.error(message);
     },
   });
 
   const handleDeletePlayer = (player: Player) => {
     if (confirm(`${player.nickname}을(를) 삭제하시겠습니까?`)) {
       deletePlayerMutation.mutate(player.id);
+    }
+  };
+
+  const handleSelfDelete = (player: Player) => {
+    if (confirm("참가 취소하시겠습니까?")) {
+      selfDeleteMutation.mutate(); // playerId 불필요
     }
   };
 
@@ -79,12 +83,14 @@ export default function PlayersPage() {
   }
 
   const playersData = players?.data || [];
+  const tournamentData = tournament?.data;
+  const isTournamentInProgress = tournamentData?.status === "IN_PROGRESS";
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-4">👥 참가자 목록</h1>
-        <p className="text-lg text-white">총 {playersData.length}명의 참가자</p>
+      <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+        <h1 className="text-4xl font-bold text-black mb-4">👥 참가자 목록</h1>
+        <p className="text-lg text-black">총 {playersData.length}명의 참가자</p>
       </div>
 
       {/* 관리자 액션 */}
@@ -123,19 +129,44 @@ export default function PlayersPage() {
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-black">
-                      {player.nickname}
-                    </h3>
-                    {isAdmin && player.name && (
-                      <p className="text-sm text-gray-500">
-                        실명: {player.name}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-black">
+                        {player.nickname}
+                      </h3>
+                      {isAdmin && player.name && (
+                        <span className="text-sm text-gray-500">
+                          ({player.name})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <RaceBadge race={player.race} />
+
+                  {/* 본인 참가 취소 버튼 */}
+                  {user && user.nickname === player.nickname && !isAdmin && (
+                    <div>
+                      {isTournamentInProgress ? (
+                        <span className="text-gray-400 font-medium text-sm">
+                          🔒 대회 진행 중
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleSelfDelete(player)}
+                          disabled={selfDeleteMutation.isPending}
+                          className="text-orange-600 hover:text-orange-800 font-medium transition-colors"
+                        >
+                          {selfDeleteMutation.isPending
+                            ? "취소 중..."
+                            : "❌ 참가 취소"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 관리자 삭제 버튼 */}
                   {isAdmin && (
                     <button
                       onClick={() => handleDeletePlayer(player)}
@@ -169,7 +200,7 @@ export default function PlayersPage() {
       {/* 종족별 통계 */}
       {playersData.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-2xl font-bold mb-6">📊 종족별 통계</h2>
+          <h2 className="text-2xl font-bold mb-6 text-black">📊 종족별 통계</h2>
           <div className="grid md:grid-cols-3 gap-4">
             {(["PROTOSS", "TERRAN", "ZERG"] as const).map((race) => {
               const count = playersData.filter((p) => p.race === race).length;

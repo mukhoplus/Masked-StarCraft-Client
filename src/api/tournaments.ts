@@ -1,10 +1,10 @@
-import { apiClient } from "./client";
+import { apiClient, publicApiClient } from "./client";
 import type { ApiResponse, Tournament, GameResultRequest } from "@/types";
 
 export const tournamentsApi = {
-  // 현재 대회 정보 조회
+  // 현재 대회 정보 조회 (공개)
   getCurrentTournament: async (): Promise<ApiResponse<Tournament | null>> => {
-    const response = await apiClient.get("/api/v1/tournaments/current");
+    const response = await publicApiClient.get("/api/v1/tournaments/current");
     return response.data;
   },
 

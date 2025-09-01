@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useRouter } from "next/navigation";
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
+  const { isConnected } = useWebSocket();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -22,14 +24,26 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-lg backdrop-blur-sm bg-white/95 border-b border-gray-200 relative">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          {/* 로고 */}
-          <Link
-            href="/"
-            className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
-            onClick={closeMenu}
-          >
-            🏆 복면스타왕
-          </Link>
+          {/* 로고와 연결 상태 */}
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/"
+              className="text-2xl font-bold text-black hover:text-gray-700 transition-colors"
+              onClick={closeMenu}
+            >
+              🏆 복면스타왕
+            </Link>
+
+            {/* WebSocket 연결 상태 */}
+            <div className="flex items-center">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isConnected ? "bg-green-500" : "bg-red-500"
+                }`}
+                title={isConnected ? "실시간 연결됨" : "연결 끊어짐"}
+              ></div>
+            </div>
+          </div>
 
           {/* 햄버거 메뉴 버튼 */}
           <button
@@ -89,13 +103,22 @@ const Header: React.FC = () => {
 
                 {/* 관리자 전용 메뉴 */}
                 {isAdmin && (
-                  <Link
-                    href="/maps"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={closeMenu}
-                  >
-                    🗺️ 맵 관리
-                  </Link>
+                  <>
+                    <Link
+                      href="/maps"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={closeMenu}
+                    >
+                      🗺️ 맵 관리
+                    </Link>
+                    <Link
+                      href="/logs"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={closeMenu}
+                    >
+                      📋 로그 관리
+                    </Link>
+                  </>
                 )}
 
                 <div className="border-t border-gray-200 my-1"></div>

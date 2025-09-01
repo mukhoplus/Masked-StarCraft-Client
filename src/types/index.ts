@@ -88,7 +88,9 @@ export interface PreviousGame {
 
 export interface TournamentResult {
   winner: Player;
-  maxStreakPlayer: Player;
+  winnerStreak: number;
+  maxStreak: number;
+  maxStreakPlayers: Player[];
 }
 
 export interface GameResultRequest {
@@ -97,13 +99,33 @@ export interface GameResultRequest {
 
 // 로그 관련 타입
 export interface TournamentLog {
-  id: number;
+  tournamentId: number;
   status: TournamentStatus;
+  startTime: string;
+  endTime: string;
   winner?: Player;
+  winnerStreak?: number;
+  maxStreak?: number;
   maxStreakPlayer?: Player;
-  createdAt: string;
+  maxStreakPlayers?: Player[];
+  stats?: {
+    totalGames: number;
+    totalParticipants: number;
+    maxStreak: number;
+    duration: string;
+  };
+}
+
+export interface Game {
+  round: number;
+  map: Map;
+  playTime: string;
+  player1: Player;
+  player2: Player;
+  winner: Player;
+  winnerStreak: number;
 }
 
 export interface TournamentLogDetail extends TournamentLog {
-  games: PreviousGame[];
+  games: Game[];
 }

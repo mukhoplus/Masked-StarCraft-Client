@@ -8,7 +8,8 @@ import type { GameResultRequest } from "@/types";
 // 현재 대회 정보 조회 훅
 export const useCurrentTournament = () => {
   const queryClient = useQueryClient();
-  const { subscribe, unsubscribe, isConnected } = useWebSocket();
+  const { registerRefreshCallback, unregisterRefreshCallback, isConnected } =
+    useWebSocket();
 
   const query = useQuery({
     queryKey: ["currentTournament"],
@@ -18,17 +19,24 @@ export const useCurrentTournament = () => {
 
   useEffect(() => {
     if (isConnected) {
-      // WebSocket 구독 설정
-      subscribe("/topic/tournament", () => {
-        // 대회 상태 변경 시 데이터 다시 가져오기
+      // 자동 새로고침 콜백 등록
+      const refreshCallback = () => {
+        // console.log("Refreshing tournament data...");
         queryClient.invalidateQueries({ queryKey: ["currentTournament"] });
-      });
+      };
+
+      registerRefreshCallback("tournament", refreshCallback);
     }
 
     return () => {
-      unsubscribe("/topic/tournament");
+      unregisterRefreshCallback("tournament");
     };
-  }, [isConnected, subscribe, unsubscribe, queryClient]);
+  }, [
+    isConnected,
+    queryClient,
+    registerRefreshCallback,
+    unregisterRefreshCallback,
+  ]);
 
   return query;
 };

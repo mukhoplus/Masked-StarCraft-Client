@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { apiClient, publicApiClient } from "./client";
 import type {
   ApiResponse,
   ApplyRequest,
@@ -7,15 +7,15 @@ import type {
 } from "@/types";
 
 export const authApi = {
-  // 참가 신청
+  // 참가 신청 (공개)
   apply: async (data: ApplyRequest): Promise<ApiResponse> => {
-    const response = await apiClient.post("/api/v1/auth/apply", data);
+    const response = await publicApiClient.post("/api/v1/auth/apply", data);
     return response.data;
   },
 
-  // 로그인
+  // 로그인 (공개)
   login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
-    const response = await apiClient.post("/api/v1/auth/login", data);
+    const response = await publicApiClient.post("/api/v1/auth/login", data);
     return response.data;
   },
 };
